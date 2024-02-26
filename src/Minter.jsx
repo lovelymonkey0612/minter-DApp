@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { connectWallet, getCurrentWalletConnected } from "./utils/interact";
 
 const Minter = (props) => {
   const [walletAddress, setWallet] = useState("");
@@ -7,12 +8,53 @@ const Minter = (props) => {
   const [description, setDescription] = useState("");
   const [url, setURL] = useState("");
 
-  //   useEffect(async () => {
-  //     //TODO: implement
-  //   }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { address, status } = await getCurrentWalletConnected();
+        console.log("status: ", status);
+        console.log("address: ", address);
+        setWallet(address);
+        setStatus(status);
+      } catch (error) {
+        // Handle error if needed
+      }
+    };
+
+    fetchData();
+    addWalletListener();
+  }, []);
+
+  function addWalletListener() {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          setWallet(accounts[0]);
+          setStatus("👆🏽 Write a message in the text-field above.");
+        } else {
+          setWallet("");
+          setStatus("🦊 Connect to Metamask using the top right button.");
+        }
+      });
+    } else {
+      setStatus(
+        <p>
+          {" "}
+          🦊{" "}
+          <a target="_blank" href={`https://metamask.io/download.html`}>
+            You must install Metamask, a virtual Ethereum wallet, in your
+            browser.
+          </a>
+        </p>
+      );
+    }
+  }
 
   const connectWalletPressed = async () => {
-    //TODO: implement
+    const walletResponse = await connectWallet();
+    console.log("walletResponse: ", walletResponse);
+    setStatus(walletResponse.status);
+    setWallet(walletResponse.address);
   };
 
   const onMintPressed = async () => {
